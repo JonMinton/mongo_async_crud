@@ -1,4 +1,5 @@
 const Employee = require('../model/Employee');
+const mongoose = require('mongoose');
 
 const getAllEmployees = async (req, res) => {
     const employees = await Employee.find();
@@ -52,11 +53,19 @@ const deleteEmployee = async (req, res) => {
 const getEmployee = async (req, res) => {
     if (!req?.params?.id) return res.status(400).json({ 'message': 'Employee ID required.' });
 
-    const employee = await Employee.findOne({ _id: req.params.id }).exec();
-    if (!employee) {
-        return res.status(204).json({ "message": `No employee matches ID ${req.params.id}.` });
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ 'message': 'Invalid ID.' });
+
+    try {
+        const employee = await Employee.findById(id).exec();
+        
+        if (!employee) {
+            return res.status(204).json({ "message": `No employee matches ID ${id}.` });
+        }
+        res.json(employee);
+    } catch (err) {
+        next (err);
     }
-    res.json(employee);
 }
 
 module.exports = {
